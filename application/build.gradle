@@ -1,0 +1,41 @@
+import static org.gradle.internal.os.OperatingSystem.current
+
+plugins {
+    id 'application'
+}
+
+repositories {
+    mavenCentral()
+}
+
+application {
+    mainClass = 'pp.projekt.FxApplicationRunner'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_18
+    targetCompatibility = JavaVersion.VERSION_18
+}
+
+def platform = current().isWindows() ? 'win' : current().isLinux() ? 'linux' : 'mac'
+
+dependencies {
+    implementation group: 'org.openjfx', name: 'javafx-base', version: '19', classifier: platform
+    implementation group: 'org.openjfx', name: 'javafx-graphics', version: '19', classifier: platform
+    implementation group: 'org.openjfx', name: 'javafx-controls', version: '19', classifier: platform
+    implementation group: 'org.openjfx', name: 'javafx-fxml', version: '19', classifier: platform
+    implementation group: 'org.openjfx', name: 'javafx-web', version: '19', classifier: platform
+    implementation group: 'org.iban4j', name: 'iban4j', version: '3.2.1'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.9.1'
+    testImplementation 'org.assertj:assertj-core:3.23.1'
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
+}
+
+
