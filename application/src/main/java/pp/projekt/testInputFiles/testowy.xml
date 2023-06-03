@@ -1,0 +1,23 @@
+<document>
+  <title>Przykładowy Dokument</title>
+  <content>
+    <section>
+      <heading>Wprowadzenie</heading>
+      <paragraph>To jest przykładowy dokument XML, który można przekonwertować na PDF.</paragraph>
+    </section>
+    <section>
+      <heading>Sekcja 1</heading>
+      <paragraph>To jest pierwsza sekcja dokumentu.</paragraph>
+      <paragraph>Można dodać więcej treści tutaj.</paragraph>
+    </section>
+    <section>
+      <heading>Sekcja 2</heading>
+      <paragraph>To jest druga sekcja dokumentu.</paragraph>
+      <paragraph>Można dodać więcej treści tutaj.</paragraph>
+    </section>
+    <section>
+      <heading>Zakończenie</heading>
+      <paragraph>To jest zakończenie dokumentu.</paragraph>
+    </section>
+  </content>
+</document>

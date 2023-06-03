@@ -15,17 +15,7 @@ public class FileToPdfConverterModel {
         return selectedFile;
     }
 
-
-    /**
-     * Pola przechowujące wartości. Wartości te są modyfikowane przez widok.
-     */
-    private BigDecimal enteredTransferAmount;
     private String choosenFileType;
-
-
-    public void setEnteredTransferAmount() {
-        this.enteredTransferAmount = new BigDecimal("150.50");
-    }
 
     final BooleanProperty isConvertButtonDisabled = new SimpleBooleanProperty(true);
     final BooleanProperty isChoosenFileTypeEmpty = new SimpleBooleanProperty(true);
@@ -53,10 +43,6 @@ public class FileToPdfConverterModel {
     public void setSelectedFile(File file) {
         this.isConvertButtonDisabled.set(!true);
         selectedFile.set(file);
-    }
-
-    public BigDecimal getEnteredTransferAmount() {
-        return enteredTransferAmount;
     }
 
 }

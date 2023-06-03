@@ -11,6 +11,10 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -67,10 +71,6 @@ public class FileToPdfConverterView {
                 fileNameLabel.setText("Nazwa pliku:  Brak");
             }
         });
-
-        TextField transferAmountTextField = new TextField();
-        transferAmountTextField.setText(String.valueOf(viewModel.getEnteredTransferAmount()));
-        transferAmountTextField.textProperty().addListener((observable, oldValue, newValue) -> viewModel.setEnteredTransferAmount());
 
 
         Button submitTransferButton = new Button("Konwertuj do PDF");
