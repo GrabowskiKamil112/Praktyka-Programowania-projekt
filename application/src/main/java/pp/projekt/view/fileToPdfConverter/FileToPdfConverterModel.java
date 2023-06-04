@@ -1,48 +1,78 @@
 package pp.projekt.view.fileToPdfConverter;
 
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.*;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
 import java.io.File;
-import java.math.BigDecimal;
 
 public class FileToPdfConverterModel {
+    private ObservableList<File> selectedFiles;
+    private String choosenFileType;
+    private ObjectProperty<File> selectedFileProperty;
 
-    private ObjectProperty<File> selectedFile = new SimpleObjectProperty<>();
     public ObjectProperty<File> selectedFileProperty() {
-        return selectedFile;
+        if (selectedFileProperty == null) {
+            selectedFileProperty = new SimpleObjectProperty<>();
+            if (!selectedFiles.isEmpty()) {
+                selectedFileProperty.set(selectedFiles.get(0));
+            }
+        }
+        return selectedFileProperty;
     }
 
-    private String choosenFileType;
+    public FileToPdfConverterModel() {
+        this.choosenFileType = "--wybierz--";
+        this.selectedFiles = FXCollections.observableArrayList();
+    }
 
     final BooleanProperty isConvertButtonDisabled = new SimpleBooleanProperty(true);
     final BooleanProperty isChoosenFileTypeEmpty = new SimpleBooleanProperty(true);
 
-    public FileToPdfConverterModel() {
-        this.choosenFileType = "--wybierz--";
-    }
-
-    public File getSelectedFile() {
-        return selectedFile.get();
-    }
-
     public void setChoosenFileType(String choosenFileType) {
         boolean isChoosenFileTypeEmpty = choosenFileType.equals("--wybierz--");
-        this.setSelectedFile(null);
+        if(isChoosenFileTypeEmpty){
+            this.resetSelectedFiles();
+        }
         this.isChoosenFileTypeEmpty.set(isChoosenFileTypeEmpty);
-        this.isConvertButtonDisabled.set(!(isChoosenFileTypeEmpty && this.getSelectedFile() != null));
+        this.isConvertButtonDisabled.set(!(isChoosenFileTypeEmpty && this.getSelectedFile(0) != null));
         this.choosenFileType = choosenFileType;
     }
-
     public String getChoosenFileType() {
         return choosenFileType;
     }
 
-    public void setSelectedFile(File file) {
+    // handling of added files
+    public void addSelectedFile(File selectedFile) {
+        System.out.println("Dodawanie pliku: " + selectedFile.getName());
         this.isConvertButtonDisabled.set(!true);
-        selectedFile.set(file);
+        selectedFiles.add(selectedFile);
+        if (this.selectedFiles.size() == 1) {
+            this.selectedFileProperty.set(selectedFiles.get(0));
+        }
+    }
+    public File getSelectedFile(int index) {
+        if (!selectedFiles.isEmpty() && index >= 0 && index < selectedFiles.size()) {
+            return selectedFiles.get(index);
+        }
+        return null;
+    }
+    public void resetSelectedFiles() {
+        selectedFiles.clear();
+    }
+    public void showSelectedFiles() {
+        if (!selectedFiles.isEmpty()) {
+            System.out.println(selectedFiles);
+        } else {
+            System.out.println("Brak dodanych plików");
+        }
+    }
+    public ObservableList<File> getSelectedFiles() {
+        System.out.println("Selected Files:" + selectedFiles);
+        for (File file : selectedFiles) {
+            System.out.println(file.getName());
+        }
+        return selectedFiles;
     }
 
 }

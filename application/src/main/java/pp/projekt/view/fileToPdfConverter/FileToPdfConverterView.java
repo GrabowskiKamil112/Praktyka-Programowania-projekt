@@ -1,5 +1,8 @@
 package pp.projekt.view.fileToPdfConverter;
 
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.ListChangeListener;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -11,20 +14,18 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.IntStream;
 
 public class FileToPdfConverterView {
     private final FileToPdfConverterModel viewModel;
+    private TableView<File> fileListTable;
 
     public FileToPdfConverterView(Stage stage, FileToPdfConverterModel viewModel) {
         this.viewModel = viewModel;
+        this.fileListTable = new TableView<>();
 
-        // Dropdown select
+    // Dropdown select
         ComboBox<String> fileTypeComboBox = new ComboBox<>();
         fileTypeComboBox.getItems().addAll("--wybierz--", "XML", "HTML", "DOCX");
         fileTypeComboBox.setValue("--wybierz--");
@@ -32,7 +33,25 @@ public class FileToPdfConverterView {
                 viewModel.setChoosenFileType(newValue);
         });
 
-        // Button to select file
+    // Table to display file names
+        fileListTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        TableColumn<File, String> fileNameColumn = new TableColumn<>("Wybrane pliki");
+        fileListTable.setPlaceholder(new Label("Brak wybranych plików"));
+        fileNameColumn.setCellValueFactory(cellData -> {
+            File file = cellData.getValue();
+            System.out.println("inside table: " + file.getName());
+            String fileName = file != null ? file.getName() : "";
+            return new SimpleStringProperty(fileName);
+        });
+        fileListTable.getColumns().add(fileNameColumn);
+        fileListTable.setItems(viewModel.getSelectedFiles());
+        viewModel.getSelectedFiles().addListener((ListChangeListener<File>) change -> {
+            System.out.println("refresh");
+            fileListTable.refresh();
+        });
+
+
+    // Button to select file
         Button selectFileButton = new Button("Dodaj plik");
         selectFileButton.disableProperty().bind(viewModel.isChoosenFileTypeEmpty);
         selectFileButton.setOnAction(event -> {
@@ -55,12 +74,14 @@ public class FileToPdfConverterView {
 
             File selectedFile = fileChooser.showOpenDialog(stage);
             if (selectedFile != null) {
-                // Do something with the selected file
-                viewModel.setSelectedFile(selectedFile);
+                viewModel.addSelectedFile(selectedFile);
+                viewModel.showSelectedFiles();
+                fileListTable.refresh();
             }
         });
 
-        // Label to display file name
+
+    // Label to display file name
         Label fileNameLabel = new Label("Nazwa pliku:  Brak");
         fileNameLabel.setMaxWidth(Double.MAX_VALUE);
         fileNameLabel.setWrapText(true);
@@ -73,11 +94,12 @@ public class FileToPdfConverterView {
         });
 
 
+    // Convert button
         Button submitTransferButton = new Button("Konwertuj do PDF");
         submitTransferButton.disableProperty().bind(viewModel.isConvertButtonDisabled);
 
 
-        // Layout
+    // Layout
         GridPane gridPane = new GridPane();
         gridPane.setHgap(15);
         gridPane.setVgap(15);
@@ -89,7 +111,6 @@ public class FileToPdfConverterView {
 
         GridPane.setHalignment(fileNameLabel, HPos.LEFT);
         GridPane.setColumnSpan(fileNameLabel, 2);
-
 
         ColumnConstraints leftColumnConstraints = new ColumnConstraints();
         leftColumnConstraints.setHalignment(HPos.RIGHT);
@@ -121,6 +142,7 @@ public class FileToPdfConverterView {
 
         panel.getChildren().addAll(
             gridPane,
+            fileListTable,
             actionButtonsBar
         );
 
