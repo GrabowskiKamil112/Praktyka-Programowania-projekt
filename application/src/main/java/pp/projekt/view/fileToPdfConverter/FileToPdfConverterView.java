@@ -1,6 +1,7 @@
 package pp.projekt.view.fileToPdfConverter;
 
 import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -17,13 +18,18 @@ import java.io.File;
 
 public class FileToPdfConverterView {
     private final FileToPdfConverterModel viewModel;
+    private Label errorLabel;
+    private Button submitTransferButton;
+    private ComboBox<FileType> fileTypeComboBox;
 
 
     public FileToPdfConverterView(Stage stage, FileToPdfConverterModel viewModel) {
         this.viewModel = viewModel;
+        this.submitTransferButton = new Button("Konwertuj do PDF");
+        this.errorLabel = new Label("Musisz wybrać co najmniej jeden plik do konwersji spośród dodanych plików");
+        this.fileTypeComboBox = new ComboBox<>();
 
     // Dropdown select
-        ComboBox<FileType> fileTypeComboBox = new ComboBox<>();
         fileTypeComboBox.getItems().addAll(FileType.EMPTY, FileType.XML, FileType.HTML, FileType.DOCX);
         fileTypeComboBox.setValue(FileType.EMPTY);
         fileTypeComboBox.setConverter(new FileTypeConverter());
@@ -60,7 +66,6 @@ public class FileToPdfConverterView {
             File selectedFile = fileChooser.showOpenDialog(stage);
             if (selectedFile != null) {
                 viewModel.addSelectedFile(selectedFile);
-                viewModel.showSelectedFiles();
                 fileTableView.refresh();
             }
         });
@@ -91,11 +96,14 @@ public class FileToPdfConverterView {
         clearListButton.setVisible(false);
         clearListButton.setOnAction(event -> {
             viewModel.resetSelectedFiles();
+            viewModel.setChoosenFileType(FileType.EMPTY);
+            fileTypeComboBox.setValue(FileType.EMPTY);
             fileTableView.refresh();
+            errorLabel.setVisible(false);
+            submitTransferButton.setText("Konwertuj do PDF");
         });
 
     // Convert button
-        Button submitTransferButton = new Button("Konwertuj do PDF");
         submitTransferButton.disableProperty().bind(viewModel.isConvertButtonDisabled);
 
         viewModel.getSelectedFiles().addListener((ListChangeListener<File>) change -> {
@@ -115,6 +123,32 @@ public class FileToPdfConverterView {
         viewModel.getSelectedCheckedFiles().addListener((ListChangeListener<File>) change -> {
             int selectedFilesCount = viewModel.getSelectedCheckedFiles().size();
             submitTransferButton.setText("Konwertuj pliki do PDF (" + selectedFilesCount + ")");
+        });
+
+        submitTransferButton.setOnAction(event -> {
+            ObservableList<File> selectedCheckedFiles = viewModel.getSelectedCheckedFiles();
+            ObservableList<File> selectedFiles = viewModel.getSelectedFiles();
+
+            if (selectedCheckedFiles.size() > 0) {
+                // TODO konwersja plików z listy selectedCheckedFiles
+                System.out.println("logika konwersji do PDF zaznaczonych plików z listy");
+            } else if (selectedFiles.size() == 0){
+                // TODO konwersja plików z listy selectedFiles
+                System.out.println("logika konwersji do PDF pliku w sytuacji kiedy tylko jeden plik został wybrany i jeszcze nie ma listy wyświetlonej");
+            }
+        });
+
+    // error label
+        errorLabel.setStyle("-fx-text-fill: red;");
+        errorLabel.setVisible(false);
+        submitTransferButton.setOnAction(event -> {
+            int selectedFilesCount = viewModel.getSelectedFiles().size();
+            int selectedCheckedFilesCount = viewModel.getSelectedCheckedFiles().size();
+            if (selectedFilesCount > 1 && selectedCheckedFilesCount == 0) {
+                errorLabel.setVisible(true);
+            } else {
+                errorLabel.setVisible(false);
+            }
         });
 
     // Layout
@@ -139,6 +173,9 @@ public class FileToPdfConverterView {
         gridPane.getColumnConstraints().addAll(leftColumnConstraints, rightColumnConstraints);
 
         HBox actionButtonsBar = new HBox(clearListButton, submitTransferButton);
+        VBox errorLabelMessage = new VBox(errorLabel);
+        errorLabelMessage.setSpacing(5);
+        errorLabelMessage.setAlignment(Pos.BASELINE_RIGHT);
         actionButtonsBar.setSpacing(5);
         actionButtonsBar.setAlignment(Pos.BASELINE_RIGHT);
 
@@ -149,7 +186,8 @@ public class FileToPdfConverterView {
         panel.getChildren().addAll(
             gridPane,
             fileTableView,
-            actionButtonsBar
+            actionButtonsBar,
+            errorLabelMessage
         );
 
         stage.setScene(new Scene(panel));

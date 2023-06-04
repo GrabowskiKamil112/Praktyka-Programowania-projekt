@@ -63,13 +63,7 @@ public class FileToPdfConverterModel {
     public void resetSelectedFiles() {
         selectedFiles.clear();
         selectedCheckedFiles.clear();
-    }
-    public void showSelectedFiles() {
-        if (!selectedFiles.isEmpty()) {
-            //System.out.println(selectedFiles);
-        } else {
-           System.out.println("Brak dodanych plików");
-        }
+        this.isConvertButtonDisabled.set(true);
     }
     public ObservableList<File> getSelectedFiles() {
         System.out.println("Selected Files:" + selectedFiles);
