@@ -14,8 +14,12 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
+
+import static pp.projekt.utils.Utils.getFileExtension;
+import static pp.projekt.utils.Utils.removeExtension;
 
 public class FileToPdfConverterView {
     private final FileToPdfConverterModel viewModel;
@@ -35,15 +39,26 @@ public class FileToPdfConverterView {
 
     // Table to display file names
         fileListTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        TableColumn<File, String> fileNameColumn = new TableColumn<>("Wybrane pliki");
         fileListTable.setPlaceholder(new Label("Brak wybranych plików"));
+
+        TableColumn<File, String> fileNameColumn = new TableColumn<>("Nazwa pliku");
         fileNameColumn.setCellValueFactory(cellData -> {
             File file = cellData.getValue();
-            System.out.println("inside table: " + file.getName());
-            String fileName = file != null ? file.getName() : "";
+            String fileName = file != null ? removeExtension(file.getName()) : "";
             return new SimpleStringProperty(fileName);
         });
-        fileListTable.getColumns().add(fileNameColumn);
+        TableColumn<File, String> fileExtensionColumn = new TableColumn<>("Rozszerzenie");
+        fileExtensionColumn.setCellValueFactory(cellData -> {
+            File file = cellData.getValue();
+            String fileExtension = file != null ? getFileExtension(file) : "";
+            return new SimpleStringProperty(fileExtension);
+        });
+
+        List<TableColumn<File, ?>> columns = new ArrayList<>();
+        columns.add(fileNameColumn);
+        columns.add(fileExtensionColumn);
+        fileListTable.getColumns().setAll(columns);
+
         fileListTable.setItems(viewModel.getSelectedFiles());
         viewModel.getSelectedFiles().addListener((ListChangeListener<File>) change -> {
             System.out.println("refresh");
@@ -93,6 +108,12 @@ public class FileToPdfConverterView {
             }
         });
 
+    // Button to clear file list
+        Button clearListButton = new Button("Wyczyść listę");
+        clearListButton.setOnAction(event -> {
+            viewModel.resetSelectedFiles();
+            fileListTable.refresh();
+        });
 
     // Convert button
         Button submitTransferButton = new Button("Konwertuj do PDF");
@@ -130,9 +151,7 @@ public class FileToPdfConverterView {
             .toList();
         gridPane.getRowConstraints().addAll(constraints);
 
-        HBox actionButtonsBar = new HBox(
-            submitTransferButton
-        );
+        HBox actionButtonsBar = new HBox(clearListButton, submitTransferButton);
         actionButtonsBar.setSpacing(5);
         actionButtonsBar.setAlignment(Pos.BASELINE_RIGHT);
 
