@@ -1,85 +1,55 @@
 package pp.projekt.view.fileToPdfConverter;
 
-import javafx.beans.binding.Bindings;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.geometry.VPos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import pp.projekt.view.FileTableView;
+import pp.projekt.view.FileType;
+import pp.projekt.view.FileTypeConverter;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.IntStream;
-
-import static pp.projekt.utils.Utils.getFileExtension;
-import static pp.projekt.utils.Utils.removeExtension;
 
 public class FileToPdfConverterView {
     private final FileToPdfConverterModel viewModel;
-    private TableView<File> fileListTable;
+
 
     public FileToPdfConverterView(Stage stage, FileToPdfConverterModel viewModel) {
         this.viewModel = viewModel;
-        this.fileListTable = new TableView<>();
 
     // Dropdown select
-        ComboBox<String> fileTypeComboBox = new ComboBox<>();
-        fileTypeComboBox.getItems().addAll("--wybierz--", "XML", "HTML", "DOCX");
-        fileTypeComboBox.setValue("--wybierz--");
+        ComboBox<FileType> fileTypeComboBox = new ComboBox<>();
+        fileTypeComboBox.getItems().addAll(FileType.EMPTY, FileType.XML, FileType.HTML, FileType.DOCX);
+        fileTypeComboBox.setValue(FileType.EMPTY);
+        fileTypeComboBox.setConverter(new FileTypeConverter());
         fileTypeComboBox.valueProperty().addListener((observable, oldValue, newValue) -> {
                 viewModel.setChoosenFileType(newValue);
         });
 
-    // Table to display file names
-        fileListTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        fileListTable.setPlaceholder(new Label("Brak wybranych plików"));
-
-        TableColumn<File, String> fileNameColumn = new TableColumn<>("Nazwa pliku");
-        fileNameColumn.setCellValueFactory(cellData -> {
-            File file = cellData.getValue();
-            String fileName = file != null ? removeExtension(file.getName()) : "";
-            return new SimpleStringProperty(fileName);
-        });
-        TableColumn<File, String> fileExtensionColumn = new TableColumn<>("Rozszerzenie");
-        fileExtensionColumn.setCellValueFactory(cellData -> {
-            File file = cellData.getValue();
-            String fileExtension = file != null ? getFileExtension(file) : "";
-            return new SimpleStringProperty(fileExtension);
-        });
-
-        List<TableColumn<File, ?>> columns = new ArrayList<>();
-        columns.add(fileNameColumn);
-        columns.add(fileExtensionColumn);
-        fileListTable.getColumns().setAll(columns);
-
-        fileListTable.setItems(viewModel.getSelectedFiles());
-        viewModel.getSelectedFiles().addListener((ListChangeListener<File>) change -> {
-            System.out.println("refresh");
-            fileListTable.refresh();
-        });
-
+    // Table to display all files
+        FileTableView fileTableView = new FileTableView(viewModel);
 
     // Button to select file
         Button selectFileButton = new Button("Dodaj plik");
         selectFileButton.disableProperty().bind(viewModel.isChoosenFileTypeEmpty);
         selectFileButton.setOnAction(event -> {
             FileChooser fileChooser = new FileChooser();
-            String choosenFileType = viewModel.getChoosenFileType();
+            FileType choosenFileType = viewModel.getChoosenFileType();
             String fileExtension = "";
 
-            if (choosenFileType.equals("XML")) {
-                fileExtension = "*.xml";
-            } else if (choosenFileType.equals("HTML")) {
-                fileExtension = "*.html";
-            } else if (choosenFileType.equals("DOCX")) {
-                fileExtension = "*.docx";
+            switch (choosenFileType) {
+                case XML:
+                    fileExtension = "*.xml"; break;
+                case HTML:
+                    fileExtension = "*.html"; break;
+                case DOCX:
+                    fileExtension = "*.docx"; break;
+                default: break;
             }
 
             if (!fileExtension.isEmpty()) {
@@ -91,10 +61,18 @@ public class FileToPdfConverterView {
             if (selectedFile != null) {
                 viewModel.addSelectedFile(selectedFile);
                 viewModel.showSelectedFiles();
-                fileListTable.refresh();
+                fileTableView.refresh();
             }
         });
 
+        viewModel.getSelectedFiles().addListener((ListChangeListener<File>) change -> {
+            int selectedFilesCount = viewModel.getSelectedFiles().size();
+            if (selectedFilesCount > 0) {
+                selectFileButton.setText("Dodaj kolejny plik");
+            } else {
+                selectFileButton.setText("Dodaj plik");
+            }
+        });
 
     // Label to display file name
         Label fileNameLabel = new Label("Nazwa pliku:  Brak");
@@ -110,21 +88,39 @@ public class FileToPdfConverterView {
 
     // Button to clear file list
         Button clearListButton = new Button("Wyczyść listę");
+        clearListButton.setVisible(false);
         clearListButton.setOnAction(event -> {
             viewModel.resetSelectedFiles();
-            fileListTable.refresh();
+            fileTableView.refresh();
         });
 
     // Convert button
         Button submitTransferButton = new Button("Konwertuj do PDF");
         submitTransferButton.disableProperty().bind(viewModel.isConvertButtonDisabled);
 
+        viewModel.getSelectedFiles().addListener((ListChangeListener<File>) change -> {
+            int selectedFilesCount = viewModel.getSelectedFiles().size();
+            if (selectedFilesCount == 0) fileNameLabel.setText("Nazwa pliku:  Brak");
+            if (selectedFilesCount > 1) {
+                submitTransferButton.setText("Konwertuj pliki do PDF (0)");
+                fileNameLabel.setVisible(false);
+                clearListButton.setVisible(true);
+            } else {
+                submitTransferButton.setText("Konwertuj do PDF");
+                fileNameLabel.setVisible(true);
+                clearListButton.setVisible(false);
+            }
+        });
+
+        viewModel.getSelectedCheckedFiles().addListener((ListChangeListener<File>) change -> {
+            int selectedFilesCount = viewModel.getSelectedCheckedFiles().size();
+            submitTransferButton.setText("Konwertuj pliki do PDF (" + selectedFilesCount + ")");
+        });
 
     // Layout
         GridPane gridPane = new GridPane();
         gridPane.setHgap(15);
         gridPane.setVgap(15);
-
 
         gridPane.addRow(gridPane.getRowCount(), new Label("Typ pliku:"), fileTypeComboBox);
         gridPane.addRow(gridPane.getRowCount(), new Label(), selectFileButton);
@@ -141,15 +137,6 @@ public class FileToPdfConverterView {
         rightColumnConstraints.setHgrow(Priority.ALWAYS);
 
         gridPane.getColumnConstraints().addAll(leftColumnConstraints, rightColumnConstraints);
-        List<RowConstraints> constraints = IntStream.rangeClosed(1, gridPane.getRowCount())
-            .mapToObj(i -> {
-                RowConstraints rowConstraints = new RowConstraints();
-                rowConstraints.setValignment(VPos.BASELINE);
-
-                return rowConstraints;
-            })
-            .toList();
-        gridPane.getRowConstraints().addAll(constraints);
 
         HBox actionButtonsBar = new HBox(clearListButton, submitTransferButton);
         actionButtonsBar.setSpacing(5);
@@ -161,13 +148,13 @@ public class FileToPdfConverterView {
 
         panel.getChildren().addAll(
             gridPane,
-            fileListTable,
+            fileTableView,
             actionButtonsBar
         );
 
         stage.setScene(new Scene(panel));
         stage.sizeToScene();
-        stage.setMinWidth(360);
+        stage.setMinWidth(520);
         stage.show();
     }
 }
