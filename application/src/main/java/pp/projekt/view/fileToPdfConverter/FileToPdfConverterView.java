@@ -62,7 +62,6 @@ public class FileToPdfConverterView {
                 FileChooser.ExtensionFilter customFilter = new FileChooser.ExtensionFilter("Pliki " + choosenFileType, fileExtension);
                 fileChooser.getExtensionFilters().add(customFilter);
             }
-
             File selectedFile = fileChooser.showOpenDialog(stage);
             if (selectedFile != null) {
                 viewModel.addSelectedFile(selectedFile);
@@ -125,9 +124,17 @@ public class FileToPdfConverterView {
             submitTransferButton.setText("Konwertuj pliki do PDF (" + selectedFilesCount + ")");
         });
 
+    // error label
+        errorLabel.setStyle("-fx-text-fill: red;");
+        errorLabel.setVisible(false);
         submitTransferButton.setOnAction(event -> {
+            int selectedFilesCount = viewModel.getSelectedFiles().size();
+            int selectedCheckedFilesCount = viewModel.getSelectedCheckedFiles().size();
+
             ObservableList<File> selectedCheckedFiles = viewModel.getSelectedCheckedFiles();
             ObservableList<File> selectedFiles = viewModel.getSelectedFiles();
+
+            errorLabel.setVisible(selectedFilesCount > 1 && selectedCheckedFilesCount == 0);
 
             if (selectedCheckedFiles.size() > 0) {
                 // TODO konwersja plików z listy selectedCheckedFiles
@@ -135,19 +142,6 @@ public class FileToPdfConverterView {
             } else if (selectedFiles.size() == 0){
                 // TODO konwersja plików z listy selectedFiles
                 System.out.println("logika konwersji do PDF pliku w sytuacji kiedy tylko jeden plik został wybrany i jeszcze nie ma listy wyświetlonej");
-            }
-        });
-
-    // error label
-        errorLabel.setStyle("-fx-text-fill: red;");
-        errorLabel.setVisible(false);
-        submitTransferButton.setOnAction(event -> {
-            int selectedFilesCount = viewModel.getSelectedFiles().size();
-            int selectedCheckedFilesCount = viewModel.getSelectedCheckedFiles().size();
-            if (selectedFilesCount > 1 && selectedCheckedFilesCount == 0) {
-                errorLabel.setVisible(true);
-            } else {
-                errorLabel.setVisible(false);
             }
         });
 
